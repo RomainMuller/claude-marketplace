@@ -1,0 +1,9 @@
+{
+  "name": "jj-vcs",
+  "version": "1.0.0",
+  "description": "Skills to enhance the experience of using the Jujutsu (JJ) version control system.",
+  "author": {
+    "name": "Romain Marcadier",
+    "email": "me@romainmuller.dev"
+  }
+}

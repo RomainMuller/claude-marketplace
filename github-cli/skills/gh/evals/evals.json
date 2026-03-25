@@ -1,0 +1,23 @@
+{
+  "skill_name": "gh-cli",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Create a PR for my bookmark romain.marcadier/PLAT-4521/fix-retry-logic in the DataDog/dd-source repo. Target main. Title: 'fix(retry): cap exponential backoff at 30s'. No draft.",
+      "expected_output": "A gh pr create command with explicit --head romain.marcadier/PLAT-4521/fix-retry-logic, --base main, and correct --title. Should NOT rely on auto-detection.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "I need to leave a code review on PR #789 in DataDog/dd-source. I want to request changes with two inline comments: one on src/retry/backoff.go at line 45 saying 'This should use a context deadline, not a raw timer', and one on src/retry/backoff.go at line 72 saying 'Missing overflow check here'. Overall message: 'Please address the timing issues before merge.'",
+      "expected_output": "A 3-step GraphQL workflow: (1) addPullRequestReview to create pending review, (2) two addPullRequestReviewThread calls with correct field names (pullRequestReviewId, path, line, side, body), (3) submitPullRequestReview with event REQUEST_CHANGES. Should correctly get PR node ID first.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Show me the open PRs I have in DataDog/dd-source and check the status of PR #512.",
+      "expected_output": "Uses 'gh pr list --author @me --state open' (not plain gh pr status which may fail) and 'gh pr view 512' with explicit repo if needed.",
+      "files": []
+    }
+  ]
+}

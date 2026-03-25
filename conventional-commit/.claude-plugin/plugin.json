@@ -1,0 +1,9 @@
+{
+  "name": "conventional-commit",
+  "version": "1.0.0",
+  "description": "Skills to enforce conventional commit messages.",
+  "author": {
+    "name": "Romain Marcadier",
+    "email": "me@romainmuller.dev"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "github-cli",
+  "version": "1.0.0",
+  "description": "Skills to improve usage of the GitHub CLI (gh).",
+  "author": {
+    "name": "Romain Marcadier",
+    "email": "me@romainmuller.dev"
+  }
+}
