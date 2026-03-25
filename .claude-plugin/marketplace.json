@@ -13,17 +13,17 @@
     {
       "name": "conventional-commit",
       "description": "Skills to enforce conventional commit messages.",
-      "source": "conventional-commit"
+      "source": "./conventional-commit"
     },
     {
       "name": "github-cli",
       "description": "Skills to improve usage of the GitHub CLI (gh).",
-      "source": "github-cli"
+      "source": "./github-cli"
     },
     {
       "name": "jj-vcs",
       "description": "Skills to enhance the experience of using the Jujutsu (JJ) version control system.",
-      "source": "jj-vcs"
+      "source": "./jj-vcs"
     }
   ]
 }

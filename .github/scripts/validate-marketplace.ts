@@ -118,10 +118,15 @@ async function main() {
   // --- Cross-reference validation (fixable) ---
   const fixableErrors: string[] = [];
   const plugins = marketplace.plugins as Record<string, unknown>[];
+
+  /** Strip leading "./" from a source to get the bare directory name. */
+  const sourceToDirName = (source: string) =>
+    source.startsWith("./") ? source.slice(2) : source;
+
   const listedSources = new Set(
     plugins
       .filter((p) => p && typeof p === "object")
-      .map((p) => p.source as string),
+      .map((p) => sourceToDirName(p.source as string)),
   );
 
   // Check each listed plugin against on-disk state
@@ -131,7 +136,14 @@ async function main() {
     const source = entry.source as string | undefined;
     if (!source) continue;
 
-    const disk = onDisk.get(source);
+    if (!source.startsWith("./")) {
+      fixableErrors.push(
+        `plugins[${i}] (${entry.name ?? "?"}): source "${source}" must start with "./"`,
+      );
+    }
+
+    const dirName = sourceToDirName(source);
+    const disk = onDisk.get(dirName);
     if (!disk) {
       fixableErrors.push(
         `plugins[${i}] (${entry.name ?? "?"}): source "${source}" does not exist on disk`,
@@ -177,21 +189,22 @@ async function main() {
       if (!entry || typeof entry !== "object") continue;
       const source = entry.source as string | undefined;
       if (!source) continue;
-      const disk = onDisk.get(source);
+      const dirName = sourceToDirName(source);
+      const disk = onDisk.get(dirName);
       if (!disk) continue; // remove non-existent
       fixed.push({
         name: disk.name,
         description: disk.description,
-        source,
+        source: `./${dirName}`,
       });
     }
     // Add missing on-disk plugins
     for (const [dirName, info] of onDisk) {
-      if (!fixed.some((f) => f.source === dirName)) {
+      if (!fixed.some((f) => sourceToDirName(f.source) === dirName)) {
         fixed.push({
           name: info.name,
           description: info.description,
-          source: dirName,
+          source: `./${dirName}`,
         });
       }
     }
