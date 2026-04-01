@@ -17,6 +17,11 @@ interface PluginInfo {
   dirName: string;
 }
 
+/** Returns true if the source refers to a remote (non-local) plugin. */
+function isRemoteSource(source: string): boolean {
+  return source.startsWith("github:");
+}
+
 /**
  * Discover all plugins on disk under `pluginRoot` by looking for
  * directories that contain a `.claude-plugin/plugin.json` file.
@@ -125,7 +130,7 @@ async function main() {
 
   const listedSources = new Set(
     plugins
-      .filter((p) => p && typeof p === "object")
+      .filter((p) => p && typeof p === "object" && !isRemoteSource(p.source as string))
       .map((p) => sourceToDirName(p.source as string)),
   );
 
@@ -135,6 +140,9 @@ async function main() {
     if (!entry || typeof entry !== "object") continue;
     const source = entry.source as string | undefined;
     if (!source) continue;
+
+    // Remote plugins (e.g. github:owner/repo) are not checked against disk
+    if (isRemoteSource(source)) continue;
 
     if (!source.startsWith("./")) {
       fixableErrors.push(
@@ -184,11 +192,20 @@ async function main() {
   if (fix && (fixableErrors.length || errors.some((e) => e.includes("missing required field")))) {
     // Rebuild the plugins array from on-disk state
     const fixed: { name: string; description: string; source: string }[] = [];
-    // Keep existing entries that have a valid on-disk source, updating fields
+    // Keep existing entries that have a valid on-disk source, updating fields;
+    // preserve remote entries as-is.
     for (const entry of plugins) {
       if (!entry || typeof entry !== "object") continue;
       const source = entry.source as string | undefined;
       if (!source) continue;
+      if (isRemoteSource(source)) {
+        fixed.push({
+          name: entry.name as string,
+          description: entry.description as string,
+          source,
+        });
+        continue;
+      }
       const dirName = sourceToDirName(source);
       const disk = onDisk.get(dirName);
       if (!disk) continue; // remove non-existent
