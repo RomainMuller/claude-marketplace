@@ -17,11 +17,6 @@ interface PluginInfo {
   dirName: string;
 }
 
-/** Returns true if the source refers to a remote (non-local) plugin. */
-function isRemoteSource(source: string): boolean {
-  return source.startsWith("github:");
-}
-
 /**
  * Discover all plugins on disk under `pluginRoot` by looking for
  * directories that contain a `.claude-plugin/plugin.json` file.
@@ -124,13 +119,17 @@ async function main() {
   const fixableErrors: string[] = [];
   const plugins = marketplace.plugins as Record<string, unknown>[];
 
-  /** Strip leading "./" from a source to get the bare directory name. */
+  /** Strip leading "./" from a local source string to get the bare directory name. */
   const sourceToDirName = (source: string) =>
     source.startsWith("./") ? source.slice(2) : source;
 
+  /** Returns true when the source is an object (remote: github, url, git-subdir, npm). */
+  const isRemoteSource = (source: unknown): boolean =>
+    typeof source === "object" && source !== null;
+
   const listedSources = new Set(
     plugins
-      .filter((p) => p && typeof p === "object" && !isRemoteSource(p.source as string))
+      .filter((p) => p && typeof p === "object" && typeof p.source === "string")
       .map((p) => sourceToDirName(p.source as string)),
   );
 
@@ -138,23 +137,24 @@ async function main() {
   for (let i = 0; i < plugins.length; i++) {
     const entry = plugins[i];
     if (!entry || typeof entry !== "object") continue;
-    const source = entry.source as string | undefined;
+    const source = entry.source;
     if (!source) continue;
 
-    // Remote plugins (e.g. github:owner/repo) are not checked against disk
+    // Remote plugins (object sources) are not checked against disk
     if (isRemoteSource(source)) continue;
 
-    if (!source.startsWith("./")) {
+    const sourceStr = source as string;
+    if (!sourceStr.startsWith("./")) {
       fixableErrors.push(
-        `plugins[${i}] (${entry.name ?? "?"}): source "${source}" must start with "./"`,
+        `plugins[${i}] (${entry.name ?? "?"}): source "${sourceStr}" must start with "./"`,
       );
     }
 
-    const dirName = sourceToDirName(source);
+    const dirName = sourceToDirName(sourceStr);
     const disk = onDisk.get(dirName);
     if (!disk) {
       fixableErrors.push(
-        `plugins[${i}] (${entry.name ?? "?"}): source "${source}" does not exist on disk`,
+        `plugins[${i}] (${entry.name ?? "?"}): source "${sourceStr}" does not exist on disk`,
       );
       continue;
     }
@@ -191,12 +191,12 @@ async function main() {
   // --- Fix mode ---
   if (fix && (fixableErrors.length || errors.some((e) => e.includes("missing required field")))) {
     // Rebuild the plugins array from on-disk state
-    const fixed: { name: string; description: string; source: string }[] = [];
-    // Keep existing entries that have a valid on-disk source, updating fields;
-    // preserve remote entries as-is.
+    const fixed: { name: string; description: string; source: unknown }[] = [];
+    // Keep existing entries: preserve remote (object) sources as-is,
+    // update local (string) sources from on-disk plugin.json.
     for (const entry of plugins) {
       if (!entry || typeof entry !== "object") continue;
-      const source = entry.source as string | undefined;
+      const source = entry.source;
       if (!source) continue;
       if (isRemoteSource(source)) {
         fixed.push({
@@ -206,7 +206,7 @@ async function main() {
         });
         continue;
       }
-      const dirName = sourceToDirName(source);
+      const dirName = sourceToDirName(source as string);
       const disk = onDisk.get(dirName);
       if (!disk) continue; // remove non-existent
       fixed.push({
@@ -217,7 +217,7 @@ async function main() {
     }
     // Add missing on-disk plugins
     for (const [dirName, info] of onDisk) {
-      if (!fixed.some((f) => sourceToDirName(f.source) === dirName)) {
+      if (!fixed.some((f) => typeof f.source === "string" && sourceToDirName(f.source) === dirName)) {
         fixed.push({
           name: info.name,
           description: info.description,

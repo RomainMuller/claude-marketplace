@@ -28,7 +28,10 @@
     {
       "name": "whip",
       "description": "Claude Code hook dispatcher -- routes hook events through configurable rules",
-      "source": "github:RomainMuller/whip"
+      "source": {
+        "source": "github",
+        "repo": "RomainMuller/whip"
+      }
     }
   ]
 }
