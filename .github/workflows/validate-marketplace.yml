@@ -12,6 +12,6 @@ jobs:
       - name: Check out
         uses: actions/checkout@v4
       - name: Set up bun
-        uses: over-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@v2
       - name: Validate marketplace.json
         run: bun .github/scripts/validate-marketplace.ts .claude-plugin/marketplace.json
