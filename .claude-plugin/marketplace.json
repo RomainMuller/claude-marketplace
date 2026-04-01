@@ -24,6 +24,11 @@
       "name": "jj-vcs",
       "description": "Skills to enhance the experience of using the Jujutsu (JJ) version control system.",
       "source": "./jj-vcs"
+    },
+    {
+      "name": "whip",
+      "description": "Claude Code hook dispatcher -- routes hook events through configurable rules",
+      "source": "github:RomainMuller/whip"
     }
   ]
 }
